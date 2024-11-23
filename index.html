@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playlist Link Extractor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            text-align: center;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #007BFF;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .output {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .output a {
+            display: block;
+            margin: 5px 0;
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        .output a:hover {
+            text-decoration: underline;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Playlist Link Extractor</h1>
+        <p>أدخل رابط قائمة التشغيل للحصول على جميع روابط الفيديوهات</p>
+        <input type="text" id="playlistLink" placeholder="ضع هنا رابط قائمة التشغيل">
+        <button onclick="extractLinks()">استخراج الروابط</button>
+        <div class="output" id="output"></div>
+        <div class="error" id="error"></div>
+    </div>
+
+    <script>
+        function extractLinks() {
+            const playlistURL = document.getElementById('playlistLink').value;
+            const output = document.getElementById('output');
+            const error = document.getElementById('error');
+
+            // تنظيف النتائج السابقة
+            output.innerHTML = '';
+            error.textContent = '';
+
+            // التحقق من صحة الرابط
+            if (!playlistURL.includes("youtube.com/playlist?list=")) {
+                error.textContent = "يرجى إدخال رابط صحيح لقائمة تشغيل يوتيوب.";
+                return;
+            }
+
+            // تحميل الصفحة باستخدام iframe
+            const iframe = document.createElement("iframe");
+            iframe.src = playlistURL;
+            iframe.style.display = "none"; // إخفاء iframe
+            document.body.appendChild(iframe);
+
+            // استخراج الروابط بعد تحميل iframe
+            iframe.onload = () => {
+                try {
+                    // الوصول إلى محتوى iframe
+                    const links = iframe.contentDocument.querySelectorAll('a');
+                    const videoLinks = Array.from(links)
+                        .map(link => link.href)
+                        .filter(href => href.includes("watch?v="));
+
+                    // عرض النتائج
+                    if (videoLinks.length > 0) {
+                        output.innerHTML = `<h3>تم استخراج ${videoLinks.length} رابط:</h3>`;
+                        videoLinks.forEach(link => {
+                            const a = document.createElement("a");
+                            a.href = link;
+                            a.textContent = link;
+                            a.target = "_blank";
+                            output.appendChild(a);
+                        });
+                    } else {
+                        error.textContent = "لم يتم العثور على أي روابط فيديو.";
+                    }
+                } catch (err) {
+                    error.textContent = "تعذر استخراج الروابط بسبب قيود الأمان في المتصفح.";
+                }
+
+                // إزالة iframe بعد الاستخدام
+                iframe.remove();
+            };
+        }
+    </script>
+</body>
+</html>
